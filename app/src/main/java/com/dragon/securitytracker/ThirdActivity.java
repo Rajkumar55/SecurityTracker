@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.GpsStatus;
 import android.location.Location;
@@ -39,12 +40,13 @@ import java.util.Calendar;
 import java.util.List;
 
 public class ThirdActivity extends AppCompatActivity {
-    private boolean api23, apiAbove23;
+    private boolean api23, apiAbove23, stopped_patrol;
     private GpsStatus.NmeaListener nmea23;
     private OnNmeaMessageListener nmeaAbove23;
     private String nmeaString, imeiNumber;
     private LocationManager LM;
     private boolean toRemove, isListenerActive;
+    private Button checkinBtn, startPatrolBtn, stopPatrolBtn, checkoutBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -207,13 +209,21 @@ public class ThirdActivity extends AppCompatActivity {
 //            }
 //        };
 
-        final Button checkinBtn = findViewById(R.id.checinBtn);
-        final Button startPatrolBtn = findViewById(R.id.startPatrolBtn);
+        checkinBtn = findViewById(R.id.checinBtn);
+        startPatrolBtn = findViewById(R.id.startPatrolBtn);
         startPatrolBtn.setEnabled(false);
-        final Button stopPatrolBtn = findViewById(R.id.stopPatrolBtn);
+        stopPatrolBtn = findViewById(R.id.stopPatrolBtn);
         stopPatrolBtn.setEnabled(false);
-        final Button checkoutBtn = findViewById(R.id.checkoutBtn);
+        checkoutBtn = findViewById(R.id.checkoutBtn);
         checkoutBtn.setEnabled(false);
+
+        stopped_patrol = false;
+
+        final SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("ACTION_PREFS", Context.MODE_PRIVATE);
+        String user_action = sharedPref.getString("action", "");
+        checkData(sharedPref, user_action);
+
+        final SharedPreferences.Editor editor = sharedPref.edit();
 
         checkinBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -223,6 +233,10 @@ public class ThirdActivity extends AppCompatActivity {
                 checkinBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(true);
                 checkoutBtn.setEnabled(true);
+
+                editor.putString("action", "CHECKED_IN");
+                editor.apply();
+
             }
         });
 
@@ -245,8 +259,13 @@ public class ThirdActivity extends AppCompatActivity {
                             getApplicationContext(),
                             TrackService.class);
                 }
+                checkinBtn.setEnabled(false);
+                checkoutBtn.setEnabled(true);
                 startPatrolBtn.setEnabled(false);
                 stopPatrolBtn.setEnabled(true);
+
+                editor.putString("action", "STARTED_PATROL");
+                editor.apply();
             }
         });
 
@@ -254,6 +273,7 @@ public class ThirdActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "Patrol Stopped", Toast.LENGTH_LONG).show();
+                stopped_patrol = true;
                 if (api23){
                     stopService(new Intent(getApplicationContext(), TrackerService.class));
                     Boolean isServiceRunning = ServiceTools.isServiceRunning(
@@ -314,8 +334,13 @@ public class ThirdActivity extends AppCompatActivity {
                         }
                     }
                 }
+                checkinBtn.setEnabled(false);
+                checkoutBtn.setEnabled(true);
                 stopPatrolBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(true);
+
+                editor.putString("action", "STOPPED_PATROL");
+                editor.apply();
             }
         });
 
@@ -323,10 +348,80 @@ public class ThirdActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "Checked out", Toast.LENGTH_LONG).show();
+
+                if (!stopped_patrol){
+                    Toast.makeText(getApplicationContext(), "Patrol Stopped", Toast.LENGTH_LONG).show();
+                    stopped_patrol = true;
+                    if (api23){
+                        stopService(new Intent(getApplicationContext(), TrackerService.class));
+                        Boolean isServiceRunning = ServiceTools.isServiceRunning(
+                                getApplicationContext(),
+                                TrackerService.class);
+
+                        nmea23 = new GpsStatus.NmeaListener() {
+                            public void onNmeaReceived(long timestamp, String nmea) {
+    //                            Log.d("TAG", "API 23 and Below - " + nmea + "\n");
+                                nmeaString = nmea;
+                                String latLong = parseNMEA(nmeaString);
+                                nmeaString = null;
+                                if (latLong != null) {
+                                    stopPatrol(imeiNumber, latLong);
+                                    toRemove = true;
+                                }
+                            }
+                        };
+
+                        //for API23 and below
+                        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                            return;
+                        }
+                        else {
+                            LM.addNmeaListener(nmea23);
+                            isListenerActive = true;
+                        }
+                    }
+                    else if (apiAbove23){
+                        stopService(new Intent(getApplicationContext(), TrackService.class));
+                        Boolean isServiceRunning = ServiceTools.isServiceRunning(
+                                getApplicationContext(),
+                                TrackService.class);
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            nmeaAbove23 = new OnNmeaMessageListener() {
+                                public void onNmeaMessage(String nmea, long timestamp) {
+    //                                Log.d("TAG", "Above 23 - " + nmea + "\n");
+                                    nmeaString = nmea;
+                                    String latLong = parseNMEA(nmeaString);
+                                    nmeaString = null;
+                                    if (latLong != null) {
+                                        stopPatrol(imeiNumber, latLong);
+                                        toRemove = true;
+                                    }
+                                }
+                            };
+
+
+                            //for API24 and above
+                            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                                return;
+                            } else {
+                                LM.addNmeaListener(nmeaAbove23);
+                                isListenerActive = true;
+                            }
+                        }
+                    }
+
+                }
                 sendData(imeiNumber, 0, 0);
                 checkinBtn.setEnabled(true);
                 checkoutBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(false);
+                stopPatrolBtn.setEnabled(false);
+
+                editor.clear();
+                editor.apply();
             }
         });
 
@@ -338,6 +433,46 @@ public class ThirdActivity extends AppCompatActivity {
                 sendData(imeiNumber, 0, 1);
             }
         });
+    }
+
+    private void checkData(SharedPreferences sharedPref, String user_action){
+        Log.e("GPS", user_action);
+        switch (user_action) {
+//            case "":
+//                SharedPreferences.Editor editor = sharedPref.edit();
+//                editor.putString("action", "CHECKED_IN");
+//                editor.apply();
+//                break;
+            case "CHECKED_IN":
+                checkinBtn.setEnabled(false);
+                startPatrolBtn.setEnabled(true);
+                checkoutBtn.setEnabled(true);
+                stopPatrolBtn.setEnabled(false);
+                break;
+            case "STARTED_PATROL":
+                checkinBtn.setEnabled(false);
+                checkoutBtn.setEnabled(true);
+                startPatrolBtn.setEnabled(false);
+                stopPatrolBtn.setEnabled(true);
+                break;
+            case "STOPPED_PATROL":
+                checkinBtn.setEnabled(false);
+                checkoutBtn.setEnabled(true);
+                stopPatrolBtn.setEnabled(false);
+                startPatrolBtn.setEnabled(true);
+                stopped_patrol = true;
+                break;
+//            default:
+//                SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
+//                sharedPrefEditor.putString("action", "CHECKED_IN");
+//                sharedPrefEditor.apply();
+//                break;
+        }
+//        else if (user_action.equals("CHECKED_OUT")){
+//            checkinBtn.setEnabled(true);
+//            checkoutBtn.setEnabled(false);
+//            startPatrolBtn.setEnabled(false);
+//        }
     }
 
     private void sendData(String imeiNumber, int checkin, final int sos){

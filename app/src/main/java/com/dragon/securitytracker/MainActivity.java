@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -28,6 +29,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("ACTION_PREFS", Context.MODE_PRIVATE);
+        String user_action = sharedPref.getString("action", "");
+        if (!user_action.equals("")){
+            Intent in = new Intent(getApplicationContext(), ThirdActivity.class);
+            startActivity(in);
+            finish();
+        }
+
 
         final TextView imeiText = findViewById(R.id.textView5);
 
