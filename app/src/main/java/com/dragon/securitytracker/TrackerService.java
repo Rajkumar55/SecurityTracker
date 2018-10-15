@@ -16,6 +16,7 @@ import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
@@ -60,7 +61,8 @@ public class TrackerService extends Service implements LocationListener, GpsStat
         LM.addNmeaListener(this);
 
         TelephonyManager mngr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        final String imeiNumber = mngr.getDeviceId();
+        final String imeiNumber = "352514086819871";
+//        final String imeiNumber = mngr.getDeviceId();
 
         if (imeiNumber != null) {
 
@@ -88,7 +90,7 @@ public class TrackerService extends Service implements LocationListener, GpsStat
                                     out.println(data);
                                     //                        out.println("352514086819871,1254.9344,N,7737.5362,E,0,0,0,1,0,1,99,0,12:38:56,15:09:18,3340,0,");
 //                                    Log.e("GPS", "Sent " + data);
-                                    out.flush();
+//                                    out.flush();
                                     s.close();
                                     //                                out.writeUTF("352514086819871,1254.9344,N,7737.5362,E,0,0,0,1,0,1,99,0,12:38:56,15:09:18,3340,0,");
                                     //                        BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -104,7 +106,7 @@ public class TrackerService extends Service implements LocationListener, GpsStat
                 }
             };
 
-            timer.schedule(hourlyTask, 0l, 1000 * 10);
+            timer.schedule(hourlyTask, 0l, 1000 * 10 * 60);
         }
     }
 

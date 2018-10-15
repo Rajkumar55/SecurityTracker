@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="219dp"
+        android:layout_height="182dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="40dp"
+
+        android:background="@mipmap/ic_launcher"
+        android:contentDescription="  CAPLOC Tracker"
+        android:scaleType="fitXY" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+
+        android:lines="2"
+        android:layout_marginTop="36dp"
+        android:fontFamily="@font/fredoka_one"
+        android:gravity="center"
+        android:text="CAPLOC\nTracker"
+        android:textColor="#7ed957"
+        android:textSize="32sp" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="170dp"
+        android:layout_height="75dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="36dp"
+        android:background="#fc5a5a"
+        android:text="START"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="match_parent"
+        android:layout_height="57dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="50dp"
+
+        android:background="#60a78f"
+        android:gravity="center"
+        android:text="Your IMEI"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="57dp"
+        android:layout_gravity="center"
+
+        android:layout_marginTop="50dp"
+        android:background="#60a78f"
+        android:gravity="center"
+        android:text="www.caploc.co.za"
+        android:textSize="18sp" />
+
+</LinearLayout>

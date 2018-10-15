@@ -5,4 +5,6 @@
     <color name="colorAccent">#FF4081</color>
     <color name="smoke">#c6e2ff</color>
     <color name="button_colour">#6495ed</color>
+    <color name="checkin_colour">#036e07</color>
+    <color name="sos_colour">#FF0000</color>
 </resources>

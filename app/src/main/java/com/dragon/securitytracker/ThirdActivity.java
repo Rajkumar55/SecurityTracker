@@ -2,7 +2,9 @@ package com.dragon.securitytracker;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,13 +20,23 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.telephony.TelephonyManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Display;
 import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,12 +58,35 @@ public class ThirdActivity extends AppCompatActivity {
     private String nmeaString, imeiNumber;
     private LocationManager LM;
     private boolean toRemove, isListenerActive;
-    private Button checkinBtn, startPatrolBtn, stopPatrolBtn, checkoutBtn;
+    private Button checkinBtn, startPatrolBtn, stopPatrolBtn, checkoutBtn, sosBtn;
+    private int checked_in, started_patrol;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_next);
+        setContentView(R.layout.activity_second);
+
+//        try {
+//            boolean hasSoftKey = ViewConfiguration.get(getApplicationContext()).hasPermanentMenuKey();
+//            if (hasSoftKey){
+//                ImageView imageView = findViewById(R.id.imageView3);
+////                LinearLayoutCompat linearLayoutCompat = findViewById(R.id.linearLayout);
+//                imageView.getLayoutParams().height = (int) getResources().getDimension(R.dimen.imageview_height);;
+//                imageView.requestLayout();
+//
+////                int dimensionInDp = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dimensionInPixel, getResources().getDisplayMetrics());
+////                view.getLayoutParams().height = dimensionInDp;
+////                view.getLayoutParams().width = dimensionInDp;
+////                view.requestLayout();
+//            }
+////            View decorView = getWindow().getDecorView();
+////            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+////                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+////            decorView.setSystemUiVisibility(uiOptions);
+//        }
+//        catch (Exception e){
+//            Log.e("GPS", Log.getStackTraceString(e));
+//        }
 
         final AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -138,7 +173,7 @@ public class ThirdActivity extends AppCompatActivity {
             @Override
             public void onProviderDisabled(String provider) {
                 builder.setTitle("Enable GPS")
-                        .setMessage("Please turn on GPS")
+                        .setMessage("Please set GPS to High Accuracy Mode")
                         .setPositiveButton("Go to Settings", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 Intent intent = new Intent();
@@ -159,6 +194,9 @@ public class ThirdActivity extends AppCompatActivity {
             api23 = true;
         else
             apiAbove23 = true;
+
+
+
 
 //        if (Build.VERSION.SDK_INT <= 23) {
 //            api23 = true;
@@ -209,15 +247,84 @@ public class ThirdActivity extends AppCompatActivity {
 //            }
 //        };
 
-        checkinBtn = findViewById(R.id.checinBtn);
-        startPatrolBtn = findViewById(R.id.startPatrolBtn);
+        checkinBtn = findViewById(R.id.checinBtn2);
+        startPatrolBtn = findViewById(R.id.startPtrlBtn);
         startPatrolBtn.setEnabled(false);
-        stopPatrolBtn = findViewById(R.id.stopPatrolBtn);
+        stopPatrolBtn = findViewById(R.id.stopPtrlBtn);
         stopPatrolBtn.setEnabled(false);
-        checkoutBtn = findViewById(R.id.checkoutBtn);
+        checkoutBtn = findViewById(R.id.checkoutBtn2);
         checkoutBtn.setEnabled(false);
+        sosBtn = findViewById(R.id.sosBtn1);
+        sosBtn.setEnabled(false);
 
         stopped_patrol = false;
+        checked_in = 0;
+        started_patrol = 0;
+//        started_patrol = false;
+
+        try {
+            Display mDisplay= getWindowManager().getDefaultDisplay();
+            int width= mDisplay.getWidth();
+            int height= mDisplay.getHeight();
+            TextView tv = findViewById(R.id.textView7);
+            ImageView imageView = findViewById(R.id.imageView3);
+            Log.e("GPS", "Width - " + width + ", Height - " + height);
+            if((width < 1100) && (height > 2000)){
+                checkinBtn.getLayoutParams().width = (int) getResources().getDimension(R.dimen.circle_width);
+                checkinBtn.getLayoutParams().height = (int) getResources().getDimension(R.dimen.circle_height);
+                checkinBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+                checkoutBtn.getLayoutParams().width = (int) getResources().getDimension(R.dimen.circle_width);
+                checkoutBtn.getLayoutParams().height = (int) getResources().getDimension(R.dimen.circle_height);
+                checkoutBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+                startPatrolBtn.getLayoutParams().height = (int) getResources().getDimension(R.dimen.circle_height);
+                startPatrolBtn.getLayoutParams().width = (int) getResources().getDimension(R.dimen.circle_width);
+                startPatrolBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+                stopPatrolBtn.getLayoutParams().height = (int) getResources().getDimension(R.dimen.circle_height);
+                stopPatrolBtn.getLayoutParams().width = (int) getResources().getDimension(R.dimen.circle_width);
+                stopPatrolBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+                sosBtn.getLayoutParams().height = (int) getResources().getDimension(R.dimen.circle_height);
+                sosBtn.getLayoutParams().width = (int) getResources().getDimension(R.dimen.circle_width);
+                sosBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+
+                Button qrcodeBtn = findViewById(R.id.qrcodeBtn);
+                qrcodeBtn.getLayoutParams().width = (int) getResources().getDimension(R.dimen.circle_width);
+                qrcodeBtn.getLayoutParams().height = (int) getResources().getDimension(R.dimen.circle_height);
+                qrcodeBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+
+                tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+
+//                ScrollView scrollView = findViewById(R.id.)
+//                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) checkinBtn.getLayoutParams();
+//                params.width = 200;
+//                params.leftMargin = 131; //params.topMargin = 200;
+
+//                checkinBtn.
+//                imageView.getLayoutParams().height = (int) getResources().getDimension(R.dimen.imageview_height);
+
+//                ConstraintLayout constraintLayout = findViewById(R.id.constraintLayout);
+//                constraintLayout.requestDisallowInterceptTouchEvent(true);
+            }
+//            DisplayMetrics displaymetrics = new DisplayMetrics();
+//            if (Build.VERSION.SDK_INT >= 17) {
+//            float dpi = getResources().getDisplayMetrics().density;
+            ViewGroup.MarginLayoutParams vlp = (ViewGroup.MarginLayoutParams) checkinBtn.getLayoutParams();
+            int margins = 2 * vlp.topMargin;
+            int buttonHeight = checkinBtn.getLayoutParams().height;
+            int textHeight = tv.getLayoutParams().height;
+            int line = (int) (4 * getResources().getDisplayMetrics().density);
+            int totalLineHeight = 4 * line;
+            int viewHeight = 3 * (buttonHeight + margins);
+            int remainingSpace = height - (viewHeight + totalLineHeight + textHeight);
+//            int extraHeight = (int) (20 * getResources().getDisplayMetrics().density);
+            imageView.getLayoutParams().height = remainingSpace;
+//                int dpi = getWindowManager().getDefaultDisplay().getRealMetrics(displaymetrics);
+//                int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, displaymetrics);
+//            Toast.makeText(getApplicationContext(), "Button Height - " + remainingSpace, Toast.LENGTH_LONG).show();
+//            }
+        }
+        catch (Exception e){
+
+        }
 
         final SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("ACTION_PREFS", Context.MODE_PRIVATE);
         String user_action = sharedPref.getString("action", "");
@@ -229,13 +336,16 @@ public class ThirdActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "Checked in", Toast.LENGTH_LONG).show();
-                sendData(imeiNumber, 1, 0);
+                checked_in = 1;
+                sendData(imeiNumber, checked_in, 0);
                 checkinBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(true);
                 checkoutBtn.setEnabled(true);
+                sosBtn.setEnabled(true);
 
                 editor.putString("action", "CHECKED_IN");
                 editor.apply();
+                stopped_patrol = false;
 
             }
         });
@@ -245,24 +355,29 @@ public class ThirdActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "Patrol Started", Toast.LENGTH_LONG).show();
-                if (api23){
-                    Intent in = new Intent(getApplicationContext(), TrackerService.class);
-                    startService(in);
-                    Boolean isServiceRunning = ServiceTools.isServiceRunning(
-                            getApplicationContext(),
-                            TrackerService.class);
-                }
-                else if (apiAbove23){
-                    Intent in = new Intent(getApplicationContext(), TrackService.class);
-                    startService(in);
-                    Boolean isServiceRunning = ServiceTools.isServiceRunning(
-                            getApplicationContext(),
-                            TrackService.class);
-                }
+                stopped_patrol = false;
+                started_patrol = 1;
+//                started_patrol = true;
+                setAlarm(getApplicationContext());
+//                if (api23){
+//                    Intent in = new Intent(getApplicationContext(), TrackerService.class);
+//                    startService(in);
+//                    Boolean isServiceRunning = ServiceTools.isServiceRunning(
+//                            getApplicationContext(),
+//                            TrackerService.class);
+//                }
+//                else if (apiAbove23){
+//                    Intent in = new Intent(getApplicationContext(), TrackService.class);
+//                    startService(in);
+//                    Boolean isServiceRunning = ServiceTools.isServiceRunning(
+//                            getApplicationContext(),
+//                            TrackService.class);
+//                }
                 checkinBtn.setEnabled(false);
-                checkoutBtn.setEnabled(true);
+                checkoutBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(false);
                 stopPatrolBtn.setEnabled(true);
+                sosBtn.setEnabled(true);
 
                 editor.putString("action", "STARTED_PATROL");
                 editor.apply();
@@ -274,11 +389,15 @@ public class ThirdActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "Patrol Stopped", Toast.LENGTH_LONG).show();
                 stopped_patrol = true;
+                started_patrol = 0;
+//                started_patrol = false;
+                cancelAlarm(getApplicationContext());
                 if (api23){
-                    stopService(new Intent(getApplicationContext(), TrackerService.class));
-                    Boolean isServiceRunning = ServiceTools.isServiceRunning(
-                            getApplicationContext(),
-                            TrackerService.class);
+                    stopService(new Intent(getApplicationContext(), CaplocTrackService.class));
+//                    stopService(new Intent(getApplicationContext(), TrackerService.class));
+//                    Boolean isServiceRunning = ServiceTools.isServiceRunning(
+//                            getApplicationContext(),
+//                            TrackerService.class);
 
                     nmea23 = new GpsStatus.NmeaListener() {
                         public void onNmeaReceived(long timestamp, String nmea) {
@@ -304,10 +423,11 @@ public class ThirdActivity extends AppCompatActivity {
                     }
                 }
                 else if (apiAbove23){
-                    stopService(new Intent(getApplicationContext(), TrackService.class));
-                    Boolean isServiceRunning = ServiceTools.isServiceRunning(
-                            getApplicationContext(),
-                            TrackService.class);
+                    stopService(new Intent(getApplicationContext(), CaplocTrackingService.class));
+//                    stopService(new Intent(getApplicationContext(), TrackService.class));
+//                    Boolean isServiceRunning = ServiceTools.isServiceRunning(
+//                            getApplicationContext(),
+//                            TrackService.class);
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         nmeaAbove23 = new OnNmeaMessageListener() {
@@ -338,6 +458,7 @@ public class ThirdActivity extends AppCompatActivity {
                 checkoutBtn.setEnabled(true);
                 stopPatrolBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(true);
+                sosBtn.setEnabled(true);
 
                 editor.putString("action", "STOPPED_PATROL");
                 editor.apply();
@@ -349,14 +470,18 @@ public class ThirdActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "Checked out", Toast.LENGTH_LONG).show();
 
-                if (!stopped_patrol){
+                if (!stopped_patrol && (started_patrol == 1)){
                     Toast.makeText(getApplicationContext(), "Patrol Stopped", Toast.LENGTH_LONG).show();
                     stopped_patrol = true;
+                    started_patrol = 0;
+//                    started_patrol = false;
+                    cancelAlarm(getApplicationContext());
                     if (api23){
-                        stopService(new Intent(getApplicationContext(), TrackerService.class));
-                        Boolean isServiceRunning = ServiceTools.isServiceRunning(
-                                getApplicationContext(),
-                                TrackerService.class);
+                        stopService(new Intent(getApplicationContext(), CaplocTrackService.class));
+//                        stopService(new Intent(getApplicationContext(), TrackerService.class));
+//                        Boolean isServiceRunning = ServiceTools.isServiceRunning(
+//                                getApplicationContext(),
+//                                TrackerService.class);
 
                         nmea23 = new GpsStatus.NmeaListener() {
                             public void onNmeaReceived(long timestamp, String nmea) {
@@ -382,10 +507,11 @@ public class ThirdActivity extends AppCompatActivity {
                         }
                     }
                     else if (apiAbove23){
-                        stopService(new Intent(getApplicationContext(), TrackService.class));
-                        Boolean isServiceRunning = ServiceTools.isServiceRunning(
-                                getApplicationContext(),
-                                TrackService.class);
+                        stopService(new Intent(getApplicationContext(), CaplocTrackingService.class));
+//                        stopService(new Intent(getApplicationContext(), TrackService.class));
+//                        Boolean isServiceRunning = ServiceTools.isServiceRunning(
+//                                getApplicationContext(),
+//                                TrackService.class);
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             nmeaAbove23 = new OnNmeaMessageListener() {
@@ -414,29 +540,31 @@ public class ThirdActivity extends AppCompatActivity {
                     }
 
                 }
-                sendData(imeiNumber, 0, 0);
+                checked_in = 0;
+                sendData(imeiNumber, checked_in, 0);
                 checkinBtn.setEnabled(true);
                 checkoutBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(false);
                 stopPatrolBtn.setEnabled(false);
+                sosBtn.setEnabled(false);
 
                 editor.clear();
                 editor.apply();
             }
         });
 
-        Button sosBtn = findViewById(R.id.sosBtn);
+
         sosBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), "SOS Sent", Toast.LENGTH_LONG).show();
-                sendData(imeiNumber, 0, 1);
+                sendData(imeiNumber, checked_in, 1);
             }
         });
     }
 
     private void checkData(SharedPreferences sharedPref, String user_action){
-        Log.e("GPS", user_action);
+//        Log.e("GPS", user_action);
         switch (user_action) {
 //            case "":
 //                SharedPreferences.Editor editor = sharedPref.edit();
@@ -448,12 +576,20 @@ public class ThirdActivity extends AppCompatActivity {
                 startPatrolBtn.setEnabled(true);
                 checkoutBtn.setEnabled(true);
                 stopPatrolBtn.setEnabled(false);
+                sosBtn.setEnabled(true);
+                stopped_patrol = false;
+                checked_in = 1;
+                started_patrol = 0;
                 break;
             case "STARTED_PATROL":
                 checkinBtn.setEnabled(false);
-                checkoutBtn.setEnabled(true);
+                checkoutBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(false);
                 stopPatrolBtn.setEnabled(true);
+                sosBtn.setEnabled(true);
+                stopped_patrol = false;
+                checked_in = 1;
+                started_patrol = 1;
                 break;
             case "STOPPED_PATROL":
                 checkinBtn.setEnabled(false);
@@ -461,6 +597,9 @@ public class ThirdActivity extends AppCompatActivity {
                 stopPatrolBtn.setEnabled(false);
                 startPatrolBtn.setEnabled(true);
                 stopped_patrol = true;
+                sosBtn.setEnabled(true);
+                checked_in = 1;
+                started_patrol = 0;
                 break;
 //            default:
 //                SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
@@ -477,7 +616,7 @@ public class ThirdActivity extends AppCompatActivity {
 
     private void sendData(String imeiNumber, int checkin, final int sos){
         final String imei = imeiNumber;
-//        final int check = checkin;
+        final int check = checkin;
         final int alert = sos;
         new Thread(new Runnable() {
 
@@ -488,7 +627,11 @@ public class ThirdActivity extends AppCompatActivity {
                     String dateTime = getDateTime();
                     String dt[] = dateTime.split(" ");
                     PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(s.getOutputStream())), true);
-                    String data = imei + ",0,N,0,E," + String.valueOf(alert) +",0,0,1,0,1,0,0," + dt[0] + "," + dt[1] +",0,0,";
+                    String data = imei + ",0,N,0,E," + String.valueOf(alert) +",0,0,1,0," + check +",0,0," + dt[0] + "," + dt[1] +",0,";
+                    if (alert == 1)
+                        data += String.valueOf(started_patrol) + ",";
+                    else
+                        data += "0,";
                     out.println(data);
 //                    Log.e("GPS", "Sent " + data);
 //                    out.flush();
@@ -596,6 +739,32 @@ public class ThirdActivity extends AppCompatActivity {
 //            Log.e("GPS", "Exception " + e.getMessage());
             return(false);
         }
+    }
+
+    private void setAlarm(Context context)
+    {
+        AlarmManager am=(AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, CaplocTrackService.class);;
+//        if (api23)
+//            intent = new Intent(context, CaplocTrackService.class);
+        if (apiAbove23)
+            intent = new Intent(context, CaplocTrackingService.class);
+//        intent.putExtra(ONE_TIME, Boolean.FALSE);
+        PendingIntent pi = PendingIntent.getService(context, 0, intent, 0);
+//        PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
+        //After after 10 seconds
+        am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 1000 * 60 * 10, pi);
+    }
+
+    private void cancelAlarm(Context context)
+    {
+        Intent intent = new Intent(context, CaplocTrackService.class);
+        if (apiAbove23)
+            intent = new Intent(context, CaplocTrackingService.class);
+        PendingIntent sender = PendingIntent.getService(context, 0, intent, 0);
+//        PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, 0);
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(sender);
     }
 
     //    private String decimalToDMS(double value) {
